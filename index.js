@@ -1,7 +1,7 @@
 let board = {
     size: {
         width: 10,
-        height: 10
+        height: 20
     },
     placedPieces:[],
     activePiece: {},
@@ -15,7 +15,8 @@ const Shapes = {
             { x: 0, y: 0},
             { x: 1, y: 0},
             { x: 0, y: 1},
-            { x: 1, y: 1}
+            { x: 1, y: 1},
+
         ],
         center: { x: 1, y: 1}
     },
@@ -140,33 +141,9 @@ const ManagePieces = {
 
 
     movePiece: (piece, direction = "down") => {
-        console.log(piece)
         let moveable = true
-        piece.blocks.forEach(block => {
-            let proposedPositionY = piece.position.y + parseInt(block.dataset.y) + 1
+        moveable = !(ManagePieces.checkAnyCollide(piece, {x: 0, y: 1}))
 
-            if(proposedPositionY >= board.size.height) {
-                moveable = false
-            }
-
-            board.placedPieces.forEach(placed => {
-                placed.blocks.forEach(placedBlock => {
-
-                    block1X = parseInt(block.dataset.x) + piece.position.x
-                    block1Y = proposedPositionY
-
-                    block2X = parseInt(placedBlock.dataset.x) + placed.position.x
-                    block2Y = parseInt(placedBlock.dataset.y) + placed.position.y
-
-
-
-                    if(block1X == block2X && block1Y == block2Y) {
-                        moveable = false
-                    }
-                })
-            })
-
-        })
 
         if(moveable) {
             piece.position.y++
@@ -180,8 +157,13 @@ const ManagePieces = {
 
 
     placePiece: (piece) => {
-        board.placedPieces.push(piece)
-        board.activePiece = ManagePieces.create()
+        if(piece === board.activePiece) {
+            board.placedPieces.push(piece)
+            board.activePiece = ManagePieces.create()
+            ManagePieces.checkClearRow()
+        }
+        
+        
     },
 
 
@@ -230,11 +212,69 @@ const ManagePieces = {
         })
 
         board.placedPieces.forEach(placed => {
-            if(ManagePieces.checkPiecesCollide(piece, placed, offset))
+            if(placed != piece && ManagePieces.checkPiecesCollide(piece, placed, offset))
             collision = true
         })
 
         return collision
+    },
+
+
+
+    checkClearRow: () => {
+        let row = 0
+        
+        while(row < board.size.height) {
+            let cols = new Array(board.size.width)
+            
+            board.placedPieces.forEach(piece => {
+                piece.blocks.forEach(block => {
+                    block1 = {x: piece.position.x + parseInt(block.dataset.x), y: piece.position.y + parseInt(block.dataset.y)}
+                    if(block1.y == row) {
+                        cols[block1.x] = block
+                    }
+                })
+            })
+
+
+            let clearRow = true
+
+            for(let i = 0; i < cols.length; i++) {
+                if(typeof cols[i] == "undefined")
+                clearRow = false
+            }
+
+            if(clearRow) {
+
+                
+                
+                cols.forEach(col => {
+                    col.remove()
+                })
+
+                ManagePieces.removeBlocksInRow(row)
+
+                board.placedPieces.forEach(piece => {
+                    ManagePieces.movePiece(piece, "down")
+                })
+
+            }
+            
+            row++
+        }
+    },
+
+
+    removeBlocksInRow: (row) => {
+        board.placedPieces.forEach(piece => {
+            piece.blocks.forEach((block, idx) => {
+                block1 = {x: piece.position.x + parseInt(block.dataset.x), y: piece.position.y + parseInt(block.dataset.y)}
+                if(block1.y == row) {
+                    console.log("Delete " + idx)
+                    delete piece[idx]
+                }
+            })
+        })
     }
 
 
