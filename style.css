@@ -27,3 +27,8 @@
 .piece {
     position: absolute;
 }
+
+html, body {
+    width: 100%;
+    overflow: hidden;
+}

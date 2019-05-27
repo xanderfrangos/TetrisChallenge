@@ -71,7 +71,7 @@ const Shapes = {
 const shapeNames = Object.keys(Shapes)
 const getRandShape = () => {
     const idx = Math.ceil(Math.random() * shapeNames.length) - 1
-    return Shapes[shapeNames[idx]]
+    return shapeNames[idx]
 }
 
 
@@ -94,11 +94,16 @@ const Elems = {
 
 
 const ManagePieces = {
-    create: (type = "Z", x = 0, y = 0, rotations = 0) => {
+    create: (type = "Random", x = 0, y = 0, rotations = 0) => {
+        if(type == "Random")
+            blockType = getRandShape()
+        else {
+            blockType = type
+        }
          let pieceData = {
             position: {x, y},
             rotation: rotations,
-            shape: Shapes[type],
+            shape: Shapes[blockType],
             elem: document.createElement("DIV"),
             blocks: []
          }
@@ -113,6 +118,13 @@ const ManagePieces = {
          ManagePieces.redrawPiece(pieceData)
 
          Elems.Board.appendChild(pieceData.elem)
+
+
+            if(ManagePieces.checkAnyCollide(pieceData)) {
+                console.log("GAME OVER")
+                clearInterval(gameLoop)
+            }         
+
          return pieceData
     },
     _createBlock: (x = 0, y = 0) => {
@@ -132,8 +144,6 @@ const ManagePieces = {
         let moveable = true
         piece.blocks.forEach(block => {
             let proposedPositionY = piece.position.y + parseInt(block.dataset.y) + 1
-            console.log(proposedPositionY)
-            console.log("bH:" + board.size.height)
 
             if(proposedPositionY >= board.size.height) {
                 moveable = false
@@ -148,7 +158,6 @@ const ManagePieces = {
                     block2X = parseInt(placedBlock.dataset.x) + placed.position.x
                     block2Y = parseInt(placedBlock.dataset.y) + placed.position.y
 
-                    console.log(`B1: ${block1X},${block1Y} | ${block2X},${block2Y}`)
 
 
                     if(block1X == block2X && block1Y == block2Y) {
@@ -172,8 +181,7 @@ const ManagePieces = {
 
     placePiece: (piece) => {
         board.placedPieces.push(piece)
-        board.activePiece = ManagePieces.create("Z", c)
-        c++
+        board.activePiece = ManagePieces.create()
     },
 
 
@@ -182,14 +190,86 @@ const ManagePieces = {
     redrawPiece: (piece) => {
         piece.elem.style.left = (`calc(${piece.position.x} * var(--b))`)
         piece.elem.style.top = (`calc(${piece.position.y} * var(--b))`)
+    },
+
+
+
+
+    checkPiecesCollide: (piece1, piece2, offset = {x: 0, y: 0}) => {
+        let collision = false
+
+
+        const p1 = {x: piece1.position.x + offset.x, y: piece1.position.y + offset.y}
+        const p2 = {x: piece2.position.x, y: piece2.position.y}
+
+        piece1.blocks.forEach(block => {
+
+            block1 = {x: p1.x + parseInt(block.dataset.x), y: p1.y + parseInt(block.dataset.y)}
+
+            piece2.blocks.forEach(p2Block => {
+                block2 = {x: p2.x + parseInt(p2Block.dataset.x), y: p2.y + parseInt(p2Block.dataset.y)}
+                if(block1.x == block2.x && block1.y == block2.y) {
+                    collision = true
+                }
+            })
+
+        })
+        return collision
+    },
+
+    checkAnyCollide: (piece, offset = {x: 0, y: 0}) => {
+        let collision = false
+
+        // Check outside board
+        piece.blocks.forEach(block => {
+            block1 = {x: piece.position.x + offset.x + parseInt(block.dataset.x), y: piece.position.y + offset.y + parseInt(block.dataset.y)}
+            if(block1.x < 0 || block1.x >= board.size.width)
+                collision = true
+            if(block1.y < 0 || block1.y >= board.size.height)
+                collision = true
+        })
+
+        board.placedPieces.forEach(placed => {
+            if(ManagePieces.checkPiecesCollide(piece, placed, offset))
+            collision = true
+        })
+
+        return collision
     }
 
 
 
 }
-var c = 0
 board.activePiece = ManagePieces.create()
 
-setInterval(() => {
+let gameLoop = setInterval(() => {
     ManagePieces.movePiece(board.activePiece)
-}, 100)
+}, 300)
+
+
+document.onkeydown = (keyEvent) => {
+    console.log(keyEvent.keyCode)
+    switch(keyEvent.keyCode) {
+        case 39:
+            // RIGHT
+            if(ManagePieces.checkAnyCollide(board.activePiece, {x: 1, y: 0}))
+            return false
+            board.activePiece.position.x++
+            ManagePieces.redrawPiece(board.activePiece)
+            break
+        case 37:
+            // LEFT
+            if(ManagePieces.checkAnyCollide(board.activePiece, {x: -1, y: 0}))
+            return false
+            board.activePiece.position.x--
+            ManagePieces.redrawPiece(board.activePiece)
+            break
+        case 40:
+            // DOWN
+            if(ManagePieces.checkAnyCollide(board.activePiece, {x: 0, y: 1}))
+            return false
+            board.activePiece.position.y++
+            ManagePieces.redrawPiece(board.activePiece)
+            break
+    }
+}
