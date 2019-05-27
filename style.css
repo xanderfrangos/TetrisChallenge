@@ -1,0 +1,29 @@
+:root {
+    --b: 20px;
+    --boardW: 15;
+    --boardH: 30;
+}
+
+.wrapper {
+    width: calc(30 * var(--b));
+    margin: auto;
+}
+
+#board {
+    position: relative;
+    box-shadow: 0 0 calc(0.05 * var(--b)) black;
+    width: calc(var(--boardW) * var(--b));
+    height: calc(var(--boardH) * var(--b));
+}
+
+.block {
+    position: absolute;
+    width: var(--b);
+    height: var(--b);
+    box-shadow: inset 0 0 0 calc(0.05 * var(--b)) rgba(0,0,0,0.8);
+    background: red;
+}
+
+.piece {
+    position: absolute;
+}
