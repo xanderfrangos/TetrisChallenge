@@ -271,7 +271,7 @@ const ManagePieces = {
                 block1 = {x: piece.position.x + parseInt(block.dataset.x), y: piece.position.y + parseInt(block.dataset.y)}
                 if(block1.y == row) {
                     console.log("Delete " + idx)
-                    delete piece[idx]
+                    delete piece.blocks[idx]
                 }
             })
         })
