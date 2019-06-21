@@ -56,7 +56,7 @@ const Shapes = {
             { x: 1, y: 3},
             { x: 0, y: 3}
         ],
-        center: { x: 1, y: 2}
+        center: { x: 2, y: 2}
     },
     /*
     Line: {
@@ -95,7 +95,7 @@ const Elems = {
 
 
 const ManagePieces = {
-    create: (type = "Random", x = 0, y = 0, rotations = 0) => {
+    create: (type = "Random", x = 4, y = 0, rotations = 0) => {
         if(type == "Random")
             blockType = getRandShape()
         else {
@@ -166,12 +166,22 @@ const ManagePieces = {
         
     },
 
-
+    rotatePiece: (piece) => {
+        piece.blocks.forEach( block => {
+            const pos = {x: parseInt(block.dataset.x), y: parseInt(block.dataset.y)}
+            block.dataset.x = (pos.y * -1) + piece.shape.center.x
+            block.dataset.y = (pos.x - 1) + piece.shape.center.y
+        })
+    },
 
 
     redrawPiece: (piece) => {
         piece.elem.style.left = (`calc(${piece.position.x} * var(--b))`)
         piece.elem.style.top = (`calc(${piece.position.y} * var(--b))`)
+        piece.blocks.forEach(block => {
+            block.style.left = (`calc(${block.dataset.x} * var(--b))`)
+            block.style.top = (`calc(${block.dataset.y} * var(--b))`)
+        })
     },
 
 
@@ -309,6 +319,11 @@ document.onkeydown = (keyEvent) => {
             if(ManagePieces.checkAnyCollide(board.activePiece, {x: 0, y: 1}))
             return false
             board.activePiece.position.y++
+            ManagePieces.redrawPiece(board.activePiece)
+            break
+        case 38:
+            // UP
+            ManagePieces.rotatePiece(board.activePiece)
             ManagePieces.redrawPiece(board.activePiece)
             break
     }
